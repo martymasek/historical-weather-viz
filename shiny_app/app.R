@@ -51,7 +51,14 @@ ui <- page_sidebar(
       selected = "Fahrenheit")
   ),
   # Output ----
-  card(plotOutput("plot"))
+  navset_tab(
+
+    ## Temperature ----
+    nav_panel("Temperature", plotOutput("plot_temp")),
+    
+    ## Sun duration ----
+    nav_panel("Sun Duration", verbatimTextOutput("plot_sun")), # plotOutput("plot_sun")),
+  )
 )
 
 # Define server logic required to draw a histogram ----
@@ -111,7 +118,7 @@ server <- function(input, output) {
     nrow(month_df()) > 0
   })
   
-  output$plot <- renderPlot({
+  output$plot_temp <- renderPlot({
     
     # handle errors
     shiny::validate(
@@ -128,6 +135,10 @@ server <- function(input, output) {
     
     plot_boxplot_for_month(df = month_df())
     
+  })
+  
+  output$plot_sun <- renderPrint({
+    "test"
   })
   
 }
