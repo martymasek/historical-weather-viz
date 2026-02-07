@@ -63,7 +63,7 @@ get_weather_data <- function(location_df, start_dt, end_dt, temp_unit) {
       values_to = "stat_value"
     ) |>
     mutate(
-      stat_type = case_match(
+      stat_type = replace_values(
         stat_type,
         "temperature_2m_min" ~ "Daily Low Temp.",
         "temperature_2m_max" ~ "Daily High Temp.",
@@ -113,7 +113,9 @@ plot_temp <- function(df) {
       mapping = aes(y = stat_value,
                     x = as.factor(year_nm),
                     group = year_nm,
-                    fill = as.factor(year_nm))) +
+                    fill = stat_type),
+      width = .7
+    ) +
     facet_wrap(
       vars(stat_type),
       ncol = 1,
@@ -125,7 +127,7 @@ plot_temp <- function(df) {
       y = "",
       title = paste0(
         unique(temp_df$month_nm), 
-        "'s Daily Temparature Distributions by Year"
+        "'s Temperature Distributions by Year"
       ),
       subtitle = unique(temp_df$location_nm)
     ) +
@@ -153,6 +155,10 @@ plot_temp <- function(df) {
       nudge_y = -y_nudege_amt_min_max,
       size = 4.5
     ) +
+    scale_fill_manual(
+      values = c("lightpink1",
+                 "thistle3")
+    ) +
     theme_bw() +
     theme(
       plot.title.position = "plot",
@@ -162,6 +168,9 @@ plot_temp <- function(df) {
       strip.background = element_blank(),
       strip.placement = "outside",
       panel.spacing = unit(2, "lines"),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.y = element_line(linetype = "dashed", color = "grey"),
       axis.text = element_text(size = 13),
       axis.title = element_text(size = 15)
     )
@@ -174,9 +183,124 @@ plot_temp <- function(df) {
 plot_sun <- function(df) {
   
   sun_df <- df |>
-    filter(stat_type == "Sunshine Duration")
+    filter(stat_type == "Sunshine Duration") |>
+    mutate(
+      has_6plus_hrs_sun = stat_value / 3600 >= 6
+    ) |>
+    group_by(
+      location_nm,
+      stat_type,
+      year_nm,
+      month_nm
+    ) |>
+    summarize(
+      n_days_w_6_hrs_sun = sum(has_6plus_hrs_sun),
+      mean_daily_sun_hrs = mean(stat_value) / 3600,
+      .groups = "drop"
+    )
   
+  my_plot_days <- ggplot(
+    sun_df,
+    aes(
+      x     = as.factor(year_nm),
+      y     = n_days_w_6_hrs_sun,
+      label = n_days_w_6_hrs_sun
+    )
+  ) +
+    geom_point(
+      shape = 19,
+      color = "gold",
+      size  = 15
+    ) +
+    geom_point(
+      shape = 8,
+      color = "gold",
+      size  = 16
+    ) +
+    geom_text(
+      color = "white",
+      size  = 6
+    ) +
+    labs(
+      y = "\nNumber of Sunny Days",
+      x = "",
+      title = paste0(
+        unique(sun_df$month_nm),
+        "'s Sunshine by Year"
+      ),
+      subtitle = paste0(
+        unique(sun_df$location_nm),
+        ". A 'sunny' day is one with at least 6 hours of sunshine."
+      )
+    ) +
+    scale_y_continuous(
+      limits = c(0, 31),
+      expand = c(0.1, 0)
+    ) +
+    theme_bw() +
+    theme(
+      plot.title.position = "plot",
+      legend.position = "none",
+      plot.title = element_text(face = "bold", size = 20),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.y = element_line(linetype = "dashed", color = "grey"),
+      axis.text = element_text(size = 13),
+      axis.title = element_text(size = 15),
+      axis.title.y = element_text(face = "bold")
+    )
   
+  my_plot_hours <- ggplot(
+    sun_df,
+    aes(
+      x     = as.factor(year_nm),
+      y     = mean_daily_sun_hrs,
+      label = round(mean_daily_sun_hrs, 0)
+    )
+  ) +
+    geom_point(
+      shape = 19,
+      color = "orange",
+      size  = 15
+    ) +
+    geom_point(
+      shape = 8,
+      color = "orange",
+      size  = 16
+    ) +
+    geom_text(
+      color = "white",
+      size  = 6
+    ) +
+    labs(
+      x = "\nYear",
+      y = "\nMean Daily Sunshine Hours"
+    ) +
+    scale_y_continuous(
+      limits = c(0, NA),
+      expand = c(0.1, 0)
+    ) +
+    theme_bw() +
+    theme(
+      plot.title.position = "plot",
+      legend.position = "none",
+      plot.title = element_text(face = "bold", size = 20),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.y = element_line(linetype = "dashed", color = "grey"),
+      axis.text = element_text(size = 13),
+      axis.title = element_text(size = 15),
+      axis.title.y = element_text(face = "bold")
+    )
+  
+  combined_plot <- cowplot::plot_grid(
+    my_plot_days, 
+    my_plot_hours,
+    ncol = 1,
+    rel_heights = c(1.1, 1)
+  )
+  
+  return(combined_plot)
   
 }
 
