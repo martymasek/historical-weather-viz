@@ -14,7 +14,7 @@ source("functions.R")
 # Define UI for app that draws a histogram ----
 ui <- page_sidebar(
   # App title ----
-  title = "Monthly Temperature Distributions by Year",
+  title = "Historical Weather Metrics",
   # Sidebar panel for inputs ----
   sidebar = sidebar(
     width = "350px",
@@ -51,7 +51,26 @@ ui <- page_sidebar(
       selected = "Fahrenheit")
   ),
   # Output ----
-  card(plotOutput("plot"))
+  navset_tab(
+    
+    ## Temperature ----
+    nav_panel(
+      "Temperature",
+      plotOutput("plot_temp", height = "600px")
+    ),
+    
+    ## Sun duration ----
+    nav_panel(
+      "Sun Duration",
+      plotOutput("plot_sun", height = "600px")
+    ),
+    
+    ## Source info
+    nav_panel(
+      "Source",
+      uiOutput("source_info")
+    )
+  )
 )
 
 # Define server logic required to draw a histogram ----
@@ -111,7 +130,7 @@ server <- function(input, output) {
     nrow(month_df()) > 0
   })
   
-  output$plot <- renderPlot({
+  output$plot_temp <- renderPlot({
     
     # handle errors
     shiny::validate(
@@ -126,8 +145,42 @@ server <- function(input, output) {
       need(month_valid(), "Ensure that the selected month is within the selected date range.")
     )
     
-    plot_boxplot_for_month(df = month_df())
+    plot_temp(df = month_df())
     
+  })
+  
+  output$plot_sun <- renderPlot({
+    
+    plot_sun(df = month_df())
+    
+  })
+  
+  output$source_info <- renderUI({
+
+    tagList(
+      tags$br(),
+      "Shiny App code by Marty Masek. See the ",
+      tags$a(
+        href = "https://github.com/martymasek/historical-weather-viz",
+        "GitHub repo.",
+        target = "_blank"
+      ),
+      tags$br(),
+      "Historical weather data from ",
+      tags$a(
+        href = "https://open-meteo.com/en/docs/historical-weather-api",
+        "Open-Meteo's Historical Weather API.",
+        target = "_blank"
+      ),
+      tags$br(),
+      "Geocoding by",
+      tags$a(
+        href = "https://jessecambon.github.io/tidygeocoder/",
+        "tidygeocoder.",
+        target = "_blank"
+      )
+    )
+
   })
   
 }
