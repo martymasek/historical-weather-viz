@@ -126,6 +126,7 @@ plot_temp <- function(df) {
       x = "\nYear",
       y = "",
       title = paste0(
+        "\n",
         unique(temp_df$month_nm), 
         "'s Temperature Distributions by Year"
       ),
@@ -210,21 +211,23 @@ plot_sun <- function(df) {
     geom_point(
       shape = 19,
       color = "gold",
-      size  = 15
+      size  = 13
     ) +
     geom_point(
       shape = 8,
       color = "gold",
-      size  = 16
+      size  = 12
     ) +
     geom_text(
       color = "white",
-      size  = 6
+      size  = 6,
+      fontface = "bold"
     ) +
     labs(
       y = "\nNumber of Sunny Days",
       x = "",
       title = paste0(
+        "\n",
         unique(sun_df$month_nm),
         "'s Sunshine by Year"
       ),
@@ -261,16 +264,17 @@ plot_sun <- function(df) {
     geom_point(
       shape = 19,
       color = "orange",
-      size  = 15
+      size  = 13
     ) +
     geom_point(
       shape = 8,
       color = "orange",
-      size  = 16
+      size  = 12
     ) +
     geom_text(
       color = "white",
-      size  = 6
+      size  = 6,
+      fontface = "bold"
     ) +
     labs(
       x = "\nYear",

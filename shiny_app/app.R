@@ -8,6 +8,7 @@ library(httr2)
 library(jsonlite)
 library(purrr)
 library(tidygeocoder) # to get lat and long from an address
+library(shinycssloaders)
 
 source("functions.R")
 
@@ -22,16 +23,22 @@ ui <- page_sidebar(
     card(
       textInput(
         "location_nm",
-        label = "Enter location",
+        label = NULL, # "Enter location",
         placeholder = "City, State and/or Country"
       ),
       dateRangeInput(
         inputId = "dates",
-        label = "Select dates",
-        start = paste0(year(Sys.Date()) - 10, "-01-01"),
+        label = NULL, # "Select dates",
+        start = paste0(year(Sys.Date()) - 15, "-01-01"),
         end   = Sys.Date() - days(1),
         min   = "1940-01-01",
         max   = Sys.Date() - days(1)
+      ),
+      selectInput(
+        "temp_unit",
+        label = NULL , # "Select temperatue unit",
+        choices = list("Fahrenheit", "Celsius"), 
+        selected = "Fahrenheit"
       ),
       actionButton(
         inputId = "submit_city_dates", 
@@ -43,12 +50,7 @@ ui <- page_sidebar(
       "month",
       label = "Select month",
       choices = as.list(month.name)
-    ),
-    radioButtons(
-      "temp_unit",
-      label = "Temperatue unit",
-      choices = list("Fahrenheit", "Celsius"), 
-      selected = "Fahrenheit")
+    )
   ),
   # Output ----
   navset_tab(
@@ -56,13 +58,13 @@ ui <- page_sidebar(
     ## Temperature ----
     nav_panel(
       "Temperature",
-      plotOutput("plot_temp", height = "600px")
+      plotOutput("plot_temp", height = "600px") |> shinycssloaders::withSpinner()
     ),
     
     ## Sun duration ----
     nav_panel(
       "Sun Duration",
-      plotOutput("plot_sun", height = "600px")
+      plotOutput("plot_sun", height = "600px") |> shinycssloaders::withSpinner()
     ),
     
     ## Source info
@@ -159,7 +161,7 @@ server <- function(input, output) {
 
     tagList(
       tags$br(),
-      "Shiny App code by Marty Masek. See the ",
+      "Shiny App code by Marty Masek with contributions by James Ahloy. See the ",
       tags$a(
         href = "https://github.com/martymasek/historical-weather-viz",
         "GitHub repo.",
